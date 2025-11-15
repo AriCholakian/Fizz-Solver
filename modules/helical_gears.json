@@ -1,88 +1,107 @@
 {
   "name": "Helical Gears",
-  "description": "Standard tooth proportions for helical gears (Table 13-4)",
+  "description": "Standard tooth proportions for helical gears",
   "variables": {
     "a": {
       "description": "Addendum",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "b": {
       "description": "Dedendum",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "P_n": {
       "description": "Normal diametral pitch",
-      "unit": "1/in"
+      "unit": "1/in",
+      "type": "continuous"
     },
     "N_P": {
       "description": "Number of teeth on pinion",
-      "unit": ""
+      "unit": "",
+      "type": "integer"
     },
     "N_G": {
       "description": "Number of teeth on gear",
-      "unit": ""
+      "unit": "",
+      "type": "integer"
     },
     "psi": {
       "description": "Helix angle",
-      "unit": "deg"
+      "unit": "deg",
+      "type": "continuous"
     },
     "phi_t": {
       "description": "Transverse pressure angle",
       "unit": "deg",
+      "type": "dropdown",
       "options": [
-        {"label": "14.5° (old standard)", "value": 14.5},
-        {"label": "20° (standard)", "value": 20},
-        {"label": "25°", "value": 25},
+        {"label": "14.5\u00b0 (old standard)", "value": 14.5},
+        {"label": "20\u00b0 (standard)", "value": 20},
+        {"label": "25\u00b0", "value": 25},
         {"label": "Custom", "value": "custom"}
       ]
     },
     "phi_n": {
       "description": "Normal pressure angle",
-      "unit": "deg"
+      "unit": "deg",
+      "type": "continuous"
     },
     "B_n": {
       "description": "Normal backlash",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "d": {
       "description": "Pinion pitch diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "D": {
       "description": "Gear pitch diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "d_o": {
       "description": "Pinion outside diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "D_o": {
       "description": "Gear outside diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "d_r": {
       "description": "Pinion root diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "D_r": {
       "description": "Gear root diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "d_b": {
       "description": "Pinion base diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "D_b": {
       "description": "Gear base diameter",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "C": {
       "description": "Center distance (external)",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     },
     "t_n": {
       "description": "Normal arc tooth thickness",
-      "unit": "in"
+      "unit": "in",
+      "type": "continuous"
     }
   },
   "equations": [

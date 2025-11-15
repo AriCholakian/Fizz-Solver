@@ -105,7 +105,8 @@
             font-weight: 500;
         }
 
-        .variable-input input {
+        .variable-input input,
+        .variable-input select {
             padding: 8px 12px;
             border: 2px solid #ddd;
             border-radius: 5px;
@@ -113,12 +114,18 @@
             transition: border-color 0.3s;
         }
 
-        .variable-input input:focus {
+        .variable-input input:focus,
+        .variable-input select:focus {
             outline: none;
             border-color: #667eea;
         }
 
         .variable-input input.solved {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .variable-input select.solved {
             background-color: #e8f5e9;
             border-color: #4caf50;
         }
@@ -344,6 +351,7 @@
         let currentModule = null;
         let moduleConfig = null;
         let solvedValues = {};
+        let userInputValues = {}; // Store user inputs persistently
 
         // Load available modules
         async function loadModules() {
@@ -373,6 +381,7 @@
                 moduleConfig = await response.json();
                 currentModule = moduleId;
                 solvedValues = {};
+                userInputValues = {}; // Reset user inputs when changing modules
                 renderVariables();
                 clearSolutionLog();
                 enableButtons();
@@ -427,10 +436,11 @@
                     const label = document.createElement('label');
                     label.htmlFor = `var-${varName}`;
                     label.textContent = `${varInfo.description} (${varName})${varInfo.unit ? ' [' + varInfo.unit + ']' : ''}`;
+                    inputDiv.appendChild(label);
 
-                    let input;
-                    if (varInfo.options && varInfo.options.length > 0) {
-                        // Create dropdown + custom input
+                    // Check if this variable has dropdown options
+                    if (varInfo.type === 'dropdown' && varInfo.options && varInfo.options.length > 0) {
+                        // Create dropdown + custom input wrapper
                         const wrapper = document.createElement('div');
                         wrapper.style.display = 'flex';
                         wrapper.style.flexDirection = 'column';
@@ -460,90 +470,112 @@
                         customInput.dataset.varName = varName;
                         customInput.style.display = 'none';
                         
-                        // NEW: Store dropdown states
-                        if (!window.dropdownStates) window.dropdownStates = {};
+                        // Determine what value to display
+                        let valueToDisplay = null;
+                        let isFromSolver = false;
                         
-                        // Restore previous dropdown state
-                        if (window.dropdownStates[varName]) {
-                            select.value = window.dropdownStates[varName].selectValue;
-                            if (window.dropdownStates[varName].customValue !== undefined) {
-                                customInput.value = window.dropdownStates[varName].customValue;
-                            }
-                            if (select.value === 'custom') {
-                                customInput.style.display = 'block';
-                            }
+                        // Priority: solved values > user inputs
+                        if (solvedValues[varName] !== undefined) {
+                            valueToDisplay = solvedValues[varName];
+                            isFromSolver = true;
+                        } else if (userInputValues[varName] !== undefined) {
+                            valueToDisplay = userInputValues[varName];
                         }
                         
-                        // Restore solved values
-                        if (solvedValues[varName] !== undefined) {
-                            const solvedVal = solvedValues[varName];
-                            customInput.classList.add('solved');
-                            
-                            // Check if it matches a dropdown option
+                        // Set the appropriate value
+                        if (valueToDisplay !== null) {
+                            // Check if value matches a dropdown option
                             const matchingOption = varInfo.options.find(opt => 
-                                opt.value !== 'custom' && Math.abs(opt.value - solvedVal) < 0.0001
+                                opt.value !== 'custom' && Math.abs(parseFloat(opt.value) - parseFloat(valueToDisplay)) < 0.0001
                             );
                             
                             if (matchingOption) {
+                                // Matches a preset option
                                 select.value = matchingOption.value;
                                 customInput.style.display = 'none';
+                                customInput.value = matchingOption.value;
                             } else {
+                                // Custom value
                                 select.value = 'custom';
-                                customInput.value = solvedVal.toFixed(6);
                                 customInput.style.display = 'block';
+                                customInput.value = typeof valueToDisplay === 'number' ? valueToDisplay.toFixed(6) : valueToDisplay;
+                            }
+                            
+                            // Mark as solved if from solver
+                            if (isFromSolver) {
+                                select.classList.add('solved');
+                                customInput.classList.add('solved');
+                                select.disabled = true;
+                                customInput.disabled = true;
                             }
                         }
                         
+                        // Dropdown change handler
                         select.addEventListener('change', (e) => {
-                            // Save dropdown state
-                            window.dropdownStates[varName] = {
-                                selectValue: e.target.value,
-                                customValue: customInput.value
-                            };
+                            const selectedValue = e.target.value;
                             
-                            if (e.target.value === 'custom') {
+                            if (selectedValue === 'custom') {
                                 customInput.style.display = 'block';
                                 customInput.focus();
-                            } else {
+                                // Keep previous custom value if exists
+                            } else if (selectedValue === '') {
+                                // Cleared selection
                                 customInput.style.display = 'none';
-                                if (e.target.value !== '') {
-                                    customInput.value = e.target.value;
-                                    // Save the new value
-                                    window.dropdownStates[varName].customValue = e.target.value;
-                                }
+                                customInput.value = '';
+                                delete userInputValues[varName];
+                            } else {
+                                // Preset value selected
+                                customInput.style.display = 'none';
+                                customInput.value = selectedValue;
+                                userInputValues[varName] = parseFloat(selectedValue);
                             }
                         });
                         
-                        // Save custom input changes
+                        // Custom input change handler
                         customInput.addEventListener('input', (e) => {
-                            if (window.dropdownStates[varName]) {
-                                window.dropdownStates[varName].customValue = e.target.value;
+                            const value = e.target.value;
+                            if (value !== '') {
+                                userInputValues[varName] = parseFloat(value);
+                            } else {
+                                delete userInputValues[varName];
                             }
                         });
                         
                         wrapper.appendChild(select);
                         wrapper.appendChild(customInput);
-                        inputDiv.appendChild(label);
                         inputDiv.appendChild(wrapper);
-                        gridDiv.appendChild(inputDiv);
                     } else {
-                        // Regular input
-                        input = document.createElement('input');
+                        // Regular numeric input
+                        const input = document.createElement('input');
                         input.type = 'number';
                         input.id = `var-${varName}`;
                         input.step = 'any';
                         input.placeholder = 'Unknown';
                         input.dataset.varName = varName;
 
+                        // Set value from solved or user input
                         if (solvedValues[varName] !== undefined) {
                             input.value = solvedValues[varName].toFixed(6);
                             input.classList.add('solved');
+                            input.disabled = true;
+                        } else if (userInputValues[varName] !== undefined) {
+                            input.value = userInputValues[varName];
                         }
 
-                        inputDiv.appendChild(label);
+                        // Save user input on change
+                        input.addEventListener('input', (e) => {
+                            const value = e.target.value;
+                            if (value !== '') {
+                                userInputValues[varName] = parseFloat(value);
+                            } else {
+                                delete userInputValues[varName];
+                            }
+                        });
+
                         inputDiv.appendChild(input);
-                        gridDiv.appendChild(inputDiv);
                     }
+
+                    gridDiv.appendChild(inputDiv);
                 });
 
                 groupDiv.appendChild(gridDiv);
@@ -555,26 +587,9 @@
         function getKnownValues() {
             const values = {};
             
-            // Check both regular inputs and custom inputs from dropdowns
-            document.querySelectorAll('input[data-var-name]').forEach(input => {
-                const varName = input.dataset.varName;
-                const value = input.value;
-                
-                // Skip if it's a solved value (has the 'solved' class)
-                if (!input.classList.contains('solved') && value !== '') {
-                    values[varName] = parseFloat(value);
-                    
-                    // Update dropdown state if it exists
-                    const select = document.getElementById(`select-${varName}`);
-                    if (select) {
-                        if (!window.dropdownStates) window.dropdownStates = {};
-                        window.dropdownStates[varName] = {
-                            selectValue: select.value,
-                            customValue: value
-                        };
-                    }
-                }
-            });
+            // Combine user inputs and solved values
+            // User inputs take precedence for unsolved variables
+            Object.assign(values, userInputValues);
             
             return values;
         }
@@ -666,6 +681,7 @@
         // Reset
         function reset() {
             solvedValues = {};
+            userInputValues = {};
             renderVariables();
             clearSolutionLog();
         }

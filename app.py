@@ -173,12 +173,14 @@ def solve():
         
         module = load_module_from_file(str(file_path))
         
-        # Set known values
+        # Set known values - handle both numeric and string values
         for var_name, value in known_values.items():
             if value is not None and value != '':
                 try:
-                    module.set_value(var_name, float(value))
-                except ValueError as e:
+                    # Convert to float regardless of input type
+                    numeric_value = float(value)
+                    module.set_value(var_name, numeric_value)
+                except (ValueError, TypeError) as e:
                     return jsonify({'error': f'Invalid value for {var_name}: {e}'}), 400
         
         # Solve
