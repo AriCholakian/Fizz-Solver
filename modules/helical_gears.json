@@ -1,0 +1,143 @@
+{
+  "name": "Helical Gears",
+  "description": "Standard tooth proportions for helical gears (Table 13-4)",
+  "variables": {
+    "a": {
+      "description": "Addendum",
+      "unit": "in"
+    },
+    "b": {
+      "description": "Dedendum",
+      "unit": "in"
+    },
+    "P_n": {
+      "description": "Normal diametral pitch",
+      "unit": "1/in"
+    },
+    "N_P": {
+      "description": "Number of teeth on pinion",
+      "unit": ""
+    },
+    "N_G": {
+      "description": "Number of teeth on gear",
+      "unit": ""
+    },
+    "psi": {
+      "description": "Helix angle",
+      "unit": "deg"
+    },
+    "phi_t": {
+      "description": "Transverse pressure angle",
+      "unit": "deg",
+      "options": [
+        {"label": "14.5° (old standard)", "value": 14.5},
+        {"label": "20° (standard)", "value": 20},
+        {"label": "25°", "value": 25},
+        {"label": "Custom", "value": "custom"}
+      ]
+    },
+    "phi_n": {
+      "description": "Normal pressure angle",
+      "unit": "deg"
+    },
+    "B_n": {
+      "description": "Normal backlash",
+      "unit": "in"
+    },
+    "d": {
+      "description": "Pinion pitch diameter",
+      "unit": "in"
+    },
+    "D": {
+      "description": "Gear pitch diameter",
+      "unit": "in"
+    },
+    "d_o": {
+      "description": "Pinion outside diameter",
+      "unit": "in"
+    },
+    "D_o": {
+      "description": "Gear outside diameter",
+      "unit": "in"
+    },
+    "d_r": {
+      "description": "Pinion root diameter",
+      "unit": "in"
+    },
+    "D_r": {
+      "description": "Gear root diameter",
+      "unit": "in"
+    },
+    "d_b": {
+      "description": "Pinion base diameter",
+      "unit": "in"
+    },
+    "D_b": {
+      "description": "Gear base diameter",
+      "unit": "in"
+    },
+    "C": {
+      "description": "Center distance (external)",
+      "unit": "in"
+    },
+    "t_n": {
+      "description": "Normal arc tooth thickness",
+      "unit": "in"
+    }
+  },
+  "equations": [
+    {
+      "name": "Addendum",
+      "equation": "Eq(a, 1.00 / P_n)"
+    },
+    {
+      "name": "Dedendum",
+      "equation": "Eq(b, 1.25 / P_n)"
+    },
+    {
+      "name": "Pinion pitch diameter",
+      "equation": "Eq(d, N_P / (P_n * cos(psi * pi / 180)))"
+    },
+    {
+      "name": "Gear pitch diameter",
+      "equation": "Eq(D, N_G / (P_n * cos(psi * pi / 180)))"
+    },
+    {
+      "name": "Pinion outside diameter",
+      "equation": "Eq(d_o, d + 2*a)"
+    },
+    {
+      "name": "Gear outside diameter",
+      "equation": "Eq(D_o, D + 2*a)"
+    },
+    {
+      "name": "Pinion root diameter",
+      "equation": "Eq(d_r, d - 2*b)"
+    },
+    {
+      "name": "Gear root diameter",
+      "equation": "Eq(D_r, D - 2*b)"
+    },
+    {
+      "name": "Standard center distance (external)",
+      "equation": "Eq(C, (D + d) / 2)"
+    },
+    {
+      "name": "Normal arc tooth thickness",
+      "equation": "Eq(t_n, pi / (2*P_n) - B_n / 2)"
+    },
+    {
+      "name": "Pinion base diameter",
+      "equation": "Eq(d_b, d * cos(phi_t * pi / 180))"
+    },
+    {
+      "name": "Gear base diameter",
+      "equation": "Eq(D_b, D * cos(phi_t * pi / 180))"
+    },
+    {
+      "name": "Base helix angle",
+      "equation": "Eq(phi_n, atan(tan(psi * pi / 180) * cos(phi_t * pi / 180)) * 180 / pi)"
+    }
+  ],
+  "tables": {}
+}

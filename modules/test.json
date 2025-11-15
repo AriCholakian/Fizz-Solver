@@ -1,0 +1,13 @@
+{
+  "name": "Module Name",
+  "description": "Brief description",
+  "variables": {
+    "var1": {"description": "Variable 1", "unit": "mm"},
+    "var2": {"description": "Variable 2", "unit": "N"}
+  },
+  "equations": [
+    {"name": "Equation 1", "equation": "Eq(var1, var2 * 5)"},
+    {"name": "Equation 2", "equation": "Eq(var1**2 + var2**2, 100)"}
+  ],
+  "tables": {}
+}

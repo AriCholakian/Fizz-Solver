@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanical Design Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .module-selector {
+            margin-bottom: 20px;
+        }
+
+        .module-selector label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        .module-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .module-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .variables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .variable-input {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .variable-input label {
+            margin-bottom: 5px;
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .variable-input input {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .variable-input input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .variable-input input.solved {
+            background-color: #e8f5e9;
+            border-color: #4caf50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #4caf50;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-reset {
+            background: #ff5252;
+            color: white;
+        }
+
+        .btn-reset:hover:not(:disabled) {
+            background: #ff1744;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 82, 82, 0.3);
+        }
+
+        .solution-log {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .step {
+            background: #f5f5f5;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        .step-header {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        .equation {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .result {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .variable-group {
+            margin-bottom: 25px;
+        }
+
+        .variable-group h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Mechanical Design Solver</h1>
+            <p>Select a module, input known variables, and solve for unknowns using symbolic equations</p>
+        </div>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2>Input Variables</h2>
+                
+                <div class="module-selector">
+                    <label for="module-select">Select Module:</label>
+                    <select id="module-select">
+                        <option value="">Loading modules...</option>
+                    </select>
+                </div>
+
+                <div id="variables-container">
+                    <div class="empty-state">
+                        <p>Select a module to begin</p>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-primary" id="solve-one-btn" disabled>
+                        <span>▶</span> Solve One Step
+                    </button>
+                    <button class="btn btn-secondary" id="solve-all-btn" disabled>
+                        <span>⏩</span> Solve All
+                    </button>
+                    <button class="btn btn-reset" id="reset-btn" disabled>
+                        <span>↻</span> Reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Solution Log</h2>
+                <div id="solution-log">
+                    <div class="empty-state">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p>Solution steps will appear here</p>
+                    </div>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px; color: #666;">Solving...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentModule = null;
+        let moduleConfig = null;
+        let solvedValues = {};
+
+        // Load available modules
+        async function loadModules() {
+            try {
+                const response = await fetch('/api/modules');
+                const modules = await response.json();
+                
+                const select = document.getElementById('module-select');
+                select.innerHTML = '<option value="">-- Select a module --</option>';
+                
+                modules.forEach(module => {
+                    const option = document.createElement('option');
+                    option.value = module.id;
+                    option.textContent = `${module.name} - ${module.description}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading modules:', error);
+                alert('Error loading modules. Make sure the server is running.');
+            }
+        }
+
+        // Load module configuration
+        async function loadModuleConfig(moduleId) {
+            try {
+                const response = await fetch(`/api/module/${moduleId}`);
+                moduleConfig = await response.json();
+                currentModule = moduleId;
+                solvedValues = {};
+                renderVariables();
+                clearSolutionLog();
+                enableButtons();
+            } catch (error) {
+                console.error('Error loading module config:', error);
+                alert('Error loading module configuration.');
+            }
+        }
+
+        // Render variable inputs
+        function renderVariables() {
+            const container = document.getElementById('variables-container');
+            container.innerHTML = '';
+
+            if (!moduleConfig) return;
+
+            // Group variables by category
+            const groups = {
+                'Basic Parameters': [],
+                'Dimensions': [],
+                'Other': []
+            };
+
+            for (const [varName, varInfo] of Object.entries(moduleConfig.variables)) {
+                const desc = varInfo.description.toLowerCase();
+                if (desc.includes('pitch') || desc.includes('teeth') || desc.includes('angle') || desc.includes('backlash')) {
+                    groups['Basic Parameters'].push([varName, varInfo]);
+                } else if (desc.includes('diameter') || desc.includes('distance') || desc.includes('thickness')) {
+                    groups['Dimensions'].push([varName, varInfo]);
+                } else {
+                    groups['Other'].push([varName, varInfo]);
+                }
+            }
+
+            for (const [groupName, variables] of Object.entries(groups)) {
+                if (variables.length === 0) continue;
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'variable-group';
+                
+                const groupTitle = document.createElement('h3');
+                groupTitle.textContent = groupName;
+                groupDiv.appendChild(groupTitle);
+
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'variables-grid';
+
+                variables.forEach(([varName, varInfo]) => {
+                    const inputDiv = document.createElement('div');
+                    inputDiv.className = 'variable-input';
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `var-${varName}`;
+                    label.textContent = `${varInfo.description} (${varName})${varInfo.unit ? ' [' + varInfo.unit + ']' : ''}`;
+
+                    let input;
+                    if (varInfo.options && varInfo.options.length > 0) {
+                        // Create dropdown + custom input
+                        const wrapper = document.createElement('div');
+                        wrapper.style.display = 'flex';
+                        wrapper.style.flexDirection = 'column';
+                        wrapper.style.gap = '5px';
+                        
+                        const select = document.createElement('select');
+                        select.id = `select-${varName}`;
+                        select.dataset.varName = varName;
+                        
+                        const defaultOption = document.createElement('option');
+                        defaultOption.value = '';
+                        defaultOption.textContent = '-- Select --';
+                        select.appendChild(defaultOption);
+                        
+                        varInfo.options.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.value;
+                            option.textContent = opt.label;
+                            select.appendChild(option);
+                        });
+                        
+                        const customInput = document.createElement('input');
+                        customInput.type = 'number';
+                        customInput.id = `var-${varName}`;
+                        customInput.step = 'any';
+                        customInput.placeholder = 'Custom value';
+                        customInput.dataset.varName = varName;
+                        customInput.style.display = 'none';
+                        
+                        // NEW: Store dropdown states
+                        if (!window.dropdownStates) window.dropdownStates = {};
+                        
+                        // Restore previous dropdown state
+                        if (window.dropdownStates[varName]) {
+                            select.value = window.dropdownStates[varName].selectValue;
+                            if (window.dropdownStates[varName].customValue !== undefined) {
+                                customInput.value = window.dropdownStates[varName].customValue;
+                            }
+                            if (select.value === 'custom') {
+                                customInput.style.display = 'block';
+                            }
+                        }
+                        
+                        // Restore solved values
+                        if (solvedValues[varName] !== undefined) {
+                            const solvedVal = solvedValues[varName];
+                            customInput.classList.add('solved');
+                            
+                            // Check if it matches a dropdown option
+                            const matchingOption = varInfo.options.find(opt => 
+                                opt.value !== 'custom' && Math.abs(opt.value - solvedVal) < 0.0001
+                            );
+                            
+                            if (matchingOption) {
+                                select.value = matchingOption.value;
+                                customInput.style.display = 'none';
+                            } else {
+                                select.value = 'custom';
+                                customInput.value = solvedVal.toFixed(6);
+                                customInput.style.display = 'block';
+                            }
+                        }
+                        
+                        select.addEventListener('change', (e) => {
+                            // Save dropdown state
+                            window.dropdownStates[varName] = {
+                                selectValue: e.target.value,
+                                customValue: customInput.value
+                            };
+                            
+                            if (e.target.value === 'custom') {
+                                customInput.style.display = 'block';
+                                customInput.focus();
+                            } else {
+                                customInput.style.display = 'none';
+                                if (e.target.value !== '') {
+                                    customInput.value = e.target.value;
+                                    // Save the new value
+                                    window.dropdownStates[varName].customValue = e.target.value;
+                                }
+                            }
+                        });
+                        
+                        // Save custom input changes
+                        customInput.addEventListener('input', (e) => {
+                            if (window.dropdownStates[varName]) {
+                                window.dropdownStates[varName].customValue = e.target.value;
+                            }
+                        });
+                        
+                        wrapper.appendChild(select);
+                        wrapper.appendChild(customInput);
+                        inputDiv.appendChild(label);
+                        inputDiv.appendChild(wrapper);
+                        gridDiv.appendChild(inputDiv);
+                    } else {
+                        // Regular input
+                        input = document.createElement('input');
+                        input.type = 'number';
+                        input.id = `var-${varName}`;
+                        input.step = 'any';
+                        input.placeholder = 'Unknown';
+                        input.dataset.varName = varName;
+
+                        if (solvedValues[varName] !== undefined) {
+                            input.value = solvedValues[varName].toFixed(6);
+                            input.classList.add('solved');
+                        }
+
+                        inputDiv.appendChild(label);
+                        inputDiv.appendChild(input);
+                        gridDiv.appendChild(inputDiv);
+                    }
+                });
+
+                groupDiv.appendChild(gridDiv);
+                container.appendChild(groupDiv);
+            }
+        }
+        
+        // Get known values from inputs
+        function getKnownValues() {
+            const values = {};
+            
+            // Check both regular inputs and custom inputs from dropdowns
+            document.querySelectorAll('input[data-var-name]').forEach(input => {
+                const varName = input.dataset.varName;
+                const value = input.value;
+                
+                // Skip if it's a solved value (has the 'solved' class)
+                if (!input.classList.contains('solved') && value !== '') {
+                    values[varName] = parseFloat(value);
+                    
+                    // Update dropdown state if it exists
+                    const select = document.getElementById(`select-${varName}`);
+                    if (select) {
+                        if (!window.dropdownStates) window.dropdownStates = {};
+                        window.dropdownStates[varName] = {
+                            selectValue: select.value,
+                            customValue: value
+                        };
+                    }
+                }
+            });
+            
+            return values;
+        }
+
+        // Solve equations
+        async function solve(mode) {
+            const knownValues = { ...getKnownValues(), ...solvedValues };
+            
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('solution-log').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/solve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        module_id: currentModule,
+                        known_values: knownValues,
+                        mode: mode
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    alert('Error: ' + result.error);
+                    return;
+                }
+
+                solvedValues = result.solved_values;
+                updateSolutionLog(result.steps);
+                renderVariables();
+
+            } catch (error) {
+                console.error('Error solving:', error);
+                alert('Error solving equations.');
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('solution-log').style.display = 'block';
+            }
+        }
+
+        // Update solution log
+        function updateSolutionLog(steps) {
+            const logDiv = document.getElementById('solution-log');
+            
+            if (steps.length === 0) {
+                logDiv.innerHTML = '<div class="empty-state"><p>No equations could be solved. Check your inputs.</p></div>';
+                return;
+            }
+
+            logDiv.innerHTML = '';
+
+            steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'step';
+
+                const header = document.createElement('div');
+                header.className = 'step-header';
+                header.innerHTML = `<span class="step-number">Step ${index + 1}</span>${step.equation_name}`;
+
+                const solvedForm = document.createElement('div');
+                solvedForm.className = 'equation';
+                solvedForm.textContent = step.solved_form;
+
+                const substituted = document.createElement('div');
+                substituted.className = 'equation';
+                substituted.textContent = step.substituted_equation;
+
+                const result = document.createElement('div');
+                result.className = 'result';
+                result.textContent = `${step.solved_for} = ${step.numerical_result.toFixed(6)}`;
+
+                stepDiv.appendChild(header);
+                stepDiv.appendChild(solvedForm);
+                stepDiv.appendChild(substituted);
+                stepDiv.appendChild(result);
+
+                logDiv.appendChild(stepDiv);
+            });
+        }
+
+        // Clear solution log
+        function clearSolutionLog() {
+            const logDiv = document.getElementById('solution-log');
+            logDiv.innerHTML = '<div class="empty-state"><p>Solution steps will appear here</p></div>';
+        }
+
+        // Reset
+        function reset() {
+            solvedValues = {};
+            renderVariables();
+            clearSolutionLog();
+        }
+
+        // Enable buttons
+        function enableButtons() {
+            document.getElementById('solve-one-btn').disabled = false;
+            document.getElementById('solve-all-btn').disabled = false;
+            document.getElementById('reset-btn').disabled = false;
+        }
+
+        // Event listeners
+        document.getElementById('module-select').addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadModuleConfig(e.target.value);
+            }
+        });
+
+        document.getElementById('solve-one-btn').addEventListener('click', () => {
+            solve('one');
+        });
+
+        document.getElementById('solve-all-btn').addEventListener('click', () => {
+            solve('all');
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            reset();
+        });
+
+        // Initialize
+        loadModules();
+    </script>
+</body>
+</html>
